@@ -1,0 +1,12 @@
+.auth-page { min-height:100vh; display:grid; place-items:center; padding:24px; background:linear-gradient(135deg,#eff3ec,#f7f8fa 55%,#e8f0f0); }
+.auth-panel { width:min(100%,440px); padding:38px; background:#fff; border:1px solid #e7eaee; border-radius:14px; box-shadow:0 18px 60px #17203312; }
+.auth-brand { display:flex; align-items:center; gap:10px; color:#172033; font-family:Manrope,sans-serif; margin-bottom:34px; }
+.auth-brand span { display:grid; place-items:center; padding:8px; background:#d4f06a; border-radius:8px; }
+.auth-panel h1 { font-size:26px; margin:0; font-family:Manrope,sans-serif; }
+.auth-panel .muted { margin:8px 0 25px; color:#687588; }
+.auth-panel form { display:grid; gap:15px; }
+.auth-panel label { display:grid; gap:6px; color:#435064; font-size:13px; font-weight:600; }
+.auth-panel input { border:1px solid #dce1e6; border-radius:7px; padding:11px; outline-color:#1f5560; }
+.auth-panel .primary-button { margin-top:5px; width:100%; }
+.auth-toggle { display:block; margin:22px auto 0; }
+.form-error { margin:0; color:#b23b3b; font-size:13px; }

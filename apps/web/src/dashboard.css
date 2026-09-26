@@ -1,0 +1,17 @@
+.health-summary { display:grid; grid-template-columns:1.3fr repeat(3,1fr); gap:16px; margin-bottom:20px; }
+.health-score { display:flex; gap:20px; align-items:center; }
+.score-ring { width:88px; height:88px; display:grid; place-items:center; border-radius:50%; background:conic-gradient(#4d8b59 0 82%,#e9eef0 82% 100%); position:relative; flex:none; }
+.score-ring::before { content:""; position:absolute; inset:8px; background:#fff; border-radius:50%; }
+.score-ring strong { position:relative; font-size:23px; font-family:Manrope,sans-serif; }
+.score-ring strong small { display:block; color:#6d7988; font-family:"DM Sans",sans-serif; font-size:10px; text-align:center; font-weight:500; }
+.health-score h2 { margin:3px 0 6px; font-size:18px; }
+.health-score p,.summary-card p { margin:0; color:#687588; font-size:13px; }
+.summary-card strong { display:block; margin:10px 0 4px; font:700 24px Manrope,sans-serif; }
+.summary-card span { color:#4d8b59; font-size:12px; font-weight:600; }
+.attention-list { display:grid; gap:10px; }
+.attention { display:flex; gap:11px; align-items:flex-start; padding:11px 0; border-bottom:1px solid #eef0f2; }
+.attention:last-child { border-bottom:0; }
+.attention strong { display:block; font-size:13px; }.attention p { margin:3px 0 0; color:#687588; font-size:12px; }
+.attention.critical svg { color:#c34949; }.attention.warning svg { color:#b77b1c; }.attention.info svg { color:#417e8a; }
+.progress-row { display:grid; grid-template-columns:140px 1fr 44px; align-items:center; gap:14px; margin:18px 0; font-size:13px; }.progress-row span { color:#435064; }.progress-bar { height:8px; overflow:hidden; background:#edf1f3; border-radius:10px; }.progress-bar i { display:block; height:100%; background:#2e7884; border-radius:10px; }.progress-row strong { font-size:12px; text-align:right; }
+@media(max-width:1080px) { .health-summary { grid-template-columns:repeat(2,1fr); } }.dashboard-grid-wide { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr); gap:20px; } @media(max-width:800px) { .health-summary,.dashboard-grid-wide { grid-template-columns:1fr; } }

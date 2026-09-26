@@ -1,0 +1,1112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  COMPANY_OWNER
+  PROJECT_MANAGER
+  SITE_ENGINEER
+  SITE_SUPERVISOR
+  PURCHASE_MANAGER
+  STORE_MANAGER
+  ACCOUNTS_MANAGER
+  CONTRACTOR
+  CLIENT
+  VIEWER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum BoqStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum InventoryTransactionType {
+  RECEIPT
+  ISSUE
+  ADJUSTMENT
+}
+
+enum PurchaseRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ORDERED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum WorkOrderStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+}
+
+enum ContractorBillStatus {
+  SUBMITTED
+  VERIFIED
+  PAID
+  REJECTED
+}
+
+enum DailyReportStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum IssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SiteIssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum ExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PAID
+  REJECTED
+}
+
+enum ClientBillStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+enum EquipmentMaintenanceStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum DocumentCategory {
+  DRAWING
+  CONTRACT
+  QUOTATION
+  PURCHASE_DOCUMENT
+  INVOICE
+  BILLING_DOCUMENT
+  SITE_PHOTO
+  OTHER
+}
+
+enum DocumentStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  SUPERSEDED
+}
+
+enum ClientQueryStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum ScheduleTaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+enum InspectionStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  VERIFIED
+}
+
+enum ChangeOrderStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum ProjectTaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ProjectTaskStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum DailyWorkPlanStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+model Organization {
+  id String @id @default(cuid())
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  memberships Membership[]
+  projects Project[]
+  sites ProjectSite[]
+  boqs Boq[]
+  boqItems BoqItem[]
+  materials Material[]
+  materialRequirements MaterialRequirement[]
+  inventoryTransactions InventoryTransaction[]
+  suppliers Supplier[]
+  purchaseRequests PurchaseRequest[]
+  purchaseRequestItems PurchaseRequestItem[]
+  purchaseOrders PurchaseOrder[]
+  purchaseOrderItems PurchaseOrderItem[]
+  goodsReceipts GoodsReceipt[]
+  goodsReceiptItems GoodsReceiptItem[]
+  contractors Contractor[]
+  workOrders WorkOrder[]
+  workers Worker[]
+  attendanceRecords Attendance[]
+  contractorBills ContractorBill[]
+  dailyReports DailyProgressReport[]
+  progressEntries ProgressEntry[]
+  siteIssues SiteIssue[]
+  siteMedia SiteMedia[]
+  expenses Expense[]
+  billingMilestones ClientBillingMilestone[]
+  clientBills ClientBill[]
+  clientPayments ClientPayment[]
+  collectionFollowUps CollectionFollowUp[]
+  equipment Equipment[]
+  equipmentAssignments EquipmentAssignment[]
+  equipmentUsages EquipmentUsage[]
+  equipmentMaintenances EquipmentMaintenance[]
+  documents Document[]
+  milestones ProjectMilestone[]
+  scheduleTasks ScheduleTask[]
+  approvalLogs ApprovalLog[]
+  approvalAssignments ApprovalAssignment[]
+  supplierQuotations SupplierQuotation[]
+  clientQueries ClientQuery[]
+  clientUpdateReads ClientUpdateRead[]
+  inspections SiteInspection[]
+  projectAccesses ProjectAccess[]
+  auditEvents AuditEvent[]
+  changeOrders ChangeOrder[]
+  projectTemplates ProjectTemplate[]
+  projectTasks ProjectTask[]
+  dailyWorkPlans DailyWorkPlan[]
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  passwordHash String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  memberships Membership[]
+  clientProjects Project[] @relation("ClientProjects")
+  clientUpdateReads ClientUpdateRead[]
+  projectAccesses ProjectAccess[]
+  assignedProjectTasks ProjectTask[] @relation("AssignedProjectTasks")
+  passwordResetTokens PasswordResetToken[]
+  approvalAssignments ApprovalAssignment[] @relation("ApprovalAssignees")
+}
+
+model Membership {
+  id String @id @default(cuid())
+  role Role @default(VIEWER)
+  organizationId String
+  userId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([organizationId, userId])
+}
+
+model PasswordResetToken {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  expiresAt DateTime
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([userId, expiresAt])
+}
+
+model ProjectAccess {
+  id String @id @default(cuid())
+  userId String
+  projectId String
+  organizationId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([userId, projectId])
+  @@index([organizationId])
+}
+
+model AuditEvent {
+  id String @id @default(cuid())
+  action String
+  entityType String
+  entityId String
+  description String
+  actorId String
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId, createdAt])
+}
+
+model ChangeOrder {
+  id String @id @default(cuid())
+  number String
+  title String
+  description String
+  amount Decimal @db.Decimal(14, 2)
+  status ChangeOrderStatus @default(DRAFT)
+  projectId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, number])
+  @@index([organizationId, projectId])
+}
+
+model ProjectTemplate {
+  id String @id @default(cuid())
+  name String
+  description String?
+  boqItems Json @default("[]")
+  scheduleTasks Json @default("[]")
+  qualityChecklist String[] @default([])
+  teamRoles String[] @default([])
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model ProjectTask {
+  id String @id @default(cuid())
+  title String
+  description String?
+  priority ProjectTaskPriority @default(MEDIUM)
+  status ProjectTaskStatus @default(OPEN)
+  dueDate DateTime? @db.Date
+  projectId String
+  assignedToId String?
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedTo User? @relation("AssignedProjectTasks", fields: [assignedToId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  dailyWorkPlans DailyWorkPlan[]
+  @@index([organizationId, status])
+  @@index([projectId, dueDate])
+}
+
+model DailyWorkPlan {
+  id String @id @default(cuid())
+  title String
+  workType String?
+  planDate DateTime @db.Date
+  labourPlanned Int @default(0)
+  completionPercent Int @default(0)
+  status DailyWorkPlanStatus @default(PLANNED)
+  notes String?
+  projectId String
+  projectSiteId String
+  projectTaskId String?
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite @relation(fields: [projectSiteId], references: [id], onDelete: Cascade)
+  projectTask ProjectTask? @relation(fields: [projectTaskId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId, planDate])
+  @@index([projectSiteId, planDate])
+}
+
+model CollectionFollowUp {
+  id String @id @default(cuid())
+  ownerName String
+  nextFollowUpAt DateTime? @db.Date
+  note String?
+  status String @default("OPEN")
+  clientBillId String
+  organizationId String
+  clientBill ClientBill @relation(fields: [clientBillId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId, status])
+}
+
+model ClientUpdateRead {
+  id String @id @default(cuid())
+  userId String
+  dailyProgressReportId String
+  organizationId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyProgressReport DailyProgressReport @relation(fields: [dailyProgressReportId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  readAt DateTime @default(now())
+  @@unique([userId, dailyProgressReportId])
+  @@index([organizationId])
+}
+
+model ClientQuery {
+  id String @id @default(cuid())
+  subject String
+  message String
+  response String?
+  status ClientQueryStatus @default(OPEN)
+  dueDate DateTime? @db.Date
+  projectId String
+  clientUserId String
+  ownerName String?
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId, projectId, status])
+}
+
+model Project {
+  id String @id @default(cuid())
+  name String
+  code String
+  contractValue Decimal @default(0) @db.Decimal(14, 2)
+  clientUserId String?
+  status ProjectStatus @default(PLANNING)
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientUser User? @relation("ClientProjects", fields: [clientUserId], references: [id], onDelete: SetNull)
+  sites ProjectSite[]
+  boqs Boq[]
+  materialRequirements MaterialRequirement[]
+  purchaseRequests PurchaseRequest[]
+  purchaseOrders PurchaseOrder[]
+  workOrders WorkOrder[]
+  contractorBills ContractorBill[]
+  dailyReports DailyProgressReport[]
+  dailyWorkPlans DailyWorkPlan[]
+  siteIssues SiteIssue[]
+  expenses Expense[]
+  billingMilestones ClientBillingMilestone[]
+  clientBills ClientBill[]
+  equipmentAssignments EquipmentAssignment[]
+  documents Document[]
+  milestones ProjectMilestone[]
+  scheduleTasks ScheduleTask[]
+  inspections SiteInspection[]
+  projectAccesses ProjectAccess[]
+  changeOrders ChangeOrder[]
+  tasks ProjectTask[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, code])
+}
+
+model ProjectSite {
+  id String @id @default(cuid())
+  name String
+  address String?
+  projectId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inventoryTransactions InventoryTransaction[]
+  purchaseRequests PurchaseRequest[]
+  purchaseOrders PurchaseOrder[]
+  goodsReceipts GoodsReceipt[]
+  attendanceRecords Attendance[]
+  dailyReports DailyProgressReport[]
+  dailyWorkPlans DailyWorkPlan[]
+  siteIssues SiteIssue[]
+  expenses Expense[]
+  equipmentAssignments EquipmentAssignment[]
+  documents Document[]
+  inspections SiteInspection[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+  @@index([projectId])
+}
+
+model Boq {
+  id String @id @default(cuid())
+  name String
+  revision Int @default(1)
+  status BoqStatus @default(DRAFT)
+  projectId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items BoqItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+  @@index([projectId])
+}
+
+model BoqItem {
+  id String @id @default(cuid())
+  code String?
+  category String?
+  description String
+  unit String
+  quantity Decimal @db.Decimal(14, 3)
+  rate Decimal @db.Decimal(14, 2)
+  sortOrder Int @default(0)
+  boqId String
+  organizationId String
+  boq Boq @relation(fields: [boqId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+  @@index([boqId])
+  progressEntries ProgressEntry[]
+}
+
+model Material {
+  id String @id @default(cuid())
+  name String
+  sku String
+  unit String
+  minimumStock Decimal @default(0) @db.Decimal(14, 3)
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requirements MaterialRequirement[]
+  inventoryTransactions InventoryTransaction[]
+  purchaseRequestItems PurchaseRequestItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+  goodsReceiptItems GoodsReceiptItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, sku])
+  @@index([organizationId])
+}
+
+model MaterialRequirement {
+  id String @id @default(cuid())
+  plannedQuantity Decimal @db.Decimal(14, 3)
+  projectId String
+  materialId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([projectId, materialId])
+  @@index([organizationId])
+}
+
+model InventoryTransaction {
+  id String @id @default(cuid())
+  type InventoryTransactionType
+  quantity Decimal @db.Decimal(14, 3)
+  unitCost Decimal? @db.Decimal(14, 2)
+  reference String?
+  notes String?
+  materialId String
+  projectSiteId String
+  organizationId String
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite @relation(fields: [projectSiteId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+  @@index([materialId])
+  @@index([projectSiteId])
+}
+
+model Supplier {
+  id String @id @default(cuid())
+  name String
+  email String?
+  phone String?
+  gstin String?
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseOrders PurchaseOrder[]
+  quotations SupplierQuotation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+}
+
+model PurchaseRequest {
+  id String @id @default(cuid())
+  requestNumber String
+  status PurchaseRequestStatus @default(DRAFT)
+  notes String?
+  projectId String
+  projectSiteId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite @relation(fields: [projectSiteId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items PurchaseRequestItem[]
+  purchaseOrders PurchaseOrder[]
+  quotations SupplierQuotation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, requestNumber])
+  @@index([organizationId])
+}
+
+model PurchaseRequestItem {
+  id String @id @default(cuid())
+  requestedQuantity Decimal @db.Decimal(14, 3)
+  purchaseRequestId String
+  materialId String
+  organizationId String
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+}
+
+model PurchaseOrder {
+  id String @id @default(cuid())
+  orderNumber String
+  status PurchaseOrderStatus @default(DRAFT)
+  purchaseRequestId String?
+  supplierId String
+  projectId String
+  projectSiteId String
+  organizationId String
+  purchaseRequest PurchaseRequest? @relation(fields: [purchaseRequestId], references: [id], onDelete: SetNull)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite @relation(fields: [projectSiteId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items PurchaseOrderItem[]
+  goodsReceipts GoodsReceipt[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, orderNumber])
+  @@index([organizationId])
+}
+
+model PurchaseOrderItem {
+  id String @id @default(cuid())
+  orderedQuantity Decimal @db.Decimal(14, 3)
+  unitPrice Decimal @db.Decimal(14, 2)
+  purchaseOrderId String
+  materialId String
+  organizationId String
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  goodsReceiptItems GoodsReceiptItem[]
+  @@index([organizationId])
+}
+
+model GoodsReceipt {
+  id String @id @default(cuid())
+  receiptNumber String
+  purchaseOrderId String
+  projectSiteId String
+  organizationId String
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite @relation(fields: [projectSiteId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items GoodsReceiptItem[]
+  createdAt DateTime @default(now())
+  @@unique([organizationId, receiptNumber])
+  @@index([organizationId])
+}
+
+model GoodsReceiptItem {
+  id String @id @default(cuid())
+  receivedQuantity Decimal @db.Decimal(14, 3)
+  unitCost Decimal @db.Decimal(14, 2)
+  goodsReceiptId String
+  purchaseOrderItemId String
+  materialId String
+  organizationId String
+  goodsReceipt GoodsReceipt @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  purchaseOrderItem PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id], onDelete: Restrict)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@index([organizationId])
+}
+
+model Contractor {
+  id String @id @default(cuid())
+  name String
+  specialty String?
+  phone String?
+  gstin String?
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workOrders WorkOrder[]
+  bills ContractorBill[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+}
+
+model WorkOrder {
+  id String @id @default(cuid())
+  workOrderNumber String
+  title String
+  contractValue Decimal @db.Decimal(14, 2)
+  status WorkOrderStatus @default(DRAFT)
+  contractorId String
+  projectId String
+  organizationId String
+  contractor Contractor @relation(fields: [contractorId], references: [id], onDelete: Restrict)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bills ContractorBill[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, workOrderNumber])
+  @@index([organizationId])
+}
+
+model Worker {
+  id String @id @default(cuid())
+  name String
+  phone String?
+  trade String
+  dailyWage Decimal @db.Decimal(12, 2)
+  isActive Boolean @default(true)
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  attendanceRecords Attendance[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+}
+
+model Attendance {
+  id String @id @default(cuid())
+  date DateTime @db.Date
+  status AttendanceStatus
+  overtimeHours Decimal @default(0) @db.Decimal(6, 2)
+  workerId String
+  projectSiteId String
+  organizationId String
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite @relation(fields: [projectSiteId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([workerId, projectSiteId, date])
+  @@index([organizationId])
+}
+
+model ContractorBill {
+  id String @id @default(cuid())
+  billNumber String
+  amount Decimal @db.Decimal(14, 2)
+  status ContractorBillStatus @default(SUBMITTED)
+  contractorId String
+  projectId String
+  workOrderId String?
+  organizationId String
+  contractor Contractor @relation(fields: [contractorId], references: [id], onDelete: Restrict)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workOrder WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, billNumber])
+  @@index([organizationId])
+}
+
+model DailyProgressReport {
+  id String @id @default(cuid())
+  reportNumber String
+  reportDate DateTime @db.Date
+  summary String
+  status DailyReportStatus @default(SUBMITTED)
+  projectId String
+  projectSiteId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite @relation(fields: [projectSiteId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  progressEntries ProgressEntry[]
+  siteIssues SiteIssue[]
+  media SiteMedia[]
+  clientUpdateReads ClientUpdateRead[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, reportNumber])
+  @@index([organizationId])
+  @@index([projectSiteId])
+}
+
+model ProgressEntry {
+  id String @id @default(cuid())
+  description String
+  completedQuantity Decimal @db.Decimal(14, 3)
+  dailyProgressReportId String
+  boqItemId String?
+  organizationId String
+  dailyProgressReport DailyProgressReport @relation(fields: [dailyProgressReportId], references: [id], onDelete: Cascade)
+  boqItem BoqItem? @relation(fields: [boqItemId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+}
+
+model SiteIssue {
+  id String @id @default(cuid())
+  title String
+  description String?
+  severity IssueSeverity @default(MEDIUM)
+  status SiteIssueStatus @default(OPEN)
+  ownerName String?
+  dailyProgressReportId String?
+  projectId String
+  projectSiteId String
+  organizationId String
+  dailyProgressReport DailyProgressReport? @relation(fields: [dailyProgressReportId], references: [id], onDelete: SetNull)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite @relation(fields: [projectSiteId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+}
+
+model SiteMedia {
+  id String @id @default(cuid())
+  fileName String
+  mediaUrl String
+  contentType String
+  dailyProgressReportId String
+  organizationId String
+  dailyProgressReport DailyProgressReport @relation(fields: [dailyProgressReportId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+}
+
+model Expense {
+  id String @id @default(cuid())
+  expenseNumber String
+  expenseDate DateTime @db.Date
+  category String
+  description String
+  amount Decimal @db.Decimal(14, 2)
+  status ExpenseStatus @default(SUBMITTED)
+  projectId String
+  projectSiteId String?
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite? @relation(fields: [projectSiteId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, expenseNumber])
+  @@index([organizationId])
+}
+
+model ClientBillingMilestone {
+  id String @id @default(cuid())
+  title String
+  amount Decimal @db.Decimal(14, 2)
+  dueDate DateTime? @db.Date
+  projectId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientBills ClientBill[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+}
+
+model ClientBill {
+  id String @id @default(cuid())
+  billNumber String
+  amount Decimal @db.Decimal(14, 2)
+  dueDate DateTime? @db.Date
+  status ClientBillStatus @default(DRAFT)
+  projectId String
+  billingMilestoneId String?
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  billingMilestone ClientBillingMilestone? @relation(fields: [billingMilestoneId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  payments ClientPayment[]
+  followUps CollectionFollowUp[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, billNumber])
+  @@index([organizationId])
+}
+
+model ClientPayment {
+  id String @id @default(cuid())
+  amount Decimal @db.Decimal(14, 2)
+  paidAt DateTime @db.Date
+  reference String?
+  clientBillId String
+  organizationId String
+  clientBill ClientBill @relation(fields: [clientBillId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+}
+
+model Equipment {
+  id String @id @default(cuid())
+  name String
+  assetCode String
+  category String
+  makeModel String?
+  status EquipmentStatus @default(AVAILABLE)
+  hourlyCost Decimal? @db.Decimal(12, 2)
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignments EquipmentAssignment[]
+  usages EquipmentUsage[]
+  maintenances EquipmentMaintenance[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, assetCode])
+  @@index([organizationId])
+}
+
+model EquipmentAssignment {
+  id String @id @default(cuid())
+  assignedAt DateTime @db.Date
+  releasedAt DateTime? @db.Date
+  equipmentId String
+  projectId String
+  projectSiteId String?
+  organizationId String
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectSite ProjectSite? @relation(fields: [projectSiteId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+  @@index([equipmentId])
+}
+
+model EquipmentUsage {
+  id String @id @default(cuid())
+  usageDate DateTime @db.Date
+  operatingHours Decimal @db.Decimal(8, 2)
+  fuelCost Decimal @default(0) @db.Decimal(12, 2)
+  notes String?
+  equipmentId String
+  organizationId String
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+  @@index([equipmentId])
+}
+
+model EquipmentMaintenance {
+  id String @id @default(cuid())
+  title String
+  scheduledDate DateTime @db.Date
+  completedDate DateTime? @db.Date
+  cost Decimal @default(0) @db.Decimal(12, 2)
+  status EquipmentMaintenanceStatus @default(SCHEDULED)
+  equipmentId String
+  organizationId String
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+  @@index([equipmentId])
+}
+
+model Document {
+  id String @id @default(cuid())
+  title String
+  fileName String
+  storageKey String
+  contentType String
+  size Int
+  category DocumentCategory @default(OTHER)
+  version Int @default(1)
+  status DocumentStatus @default(DRAFT)
+  parentDocumentId String?
+  projectId String?
+  projectSiteId String?
+  organizationId String
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectSite ProjectSite? @relation(fields: [projectSiteId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([organizationId, parentDocumentId])
+}
+
+model ProjectMilestone {
+  id String @id @default(cuid())
+  title String
+  plannedDate DateTime @db.Date
+  completedDate DateTime? @db.Date
+  projectId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+}
+
+model ScheduleTask {
+  id String @id @default(cuid())
+  title String
+  plannedStart DateTime @db.Date
+  plannedEnd DateTime @db.Date
+  actualEnd DateTime? @db.Date
+  progress Int @default(0)
+  status ScheduleTaskStatus @default(NOT_STARTED)
+  projectId String
+  organizationId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId])
+  @@index([projectId])
+}
+
+model ApprovalLog {
+  id String @id @default(cuid())
+  entityType String
+  entityId String
+  decision String
+  note String?
+  actorId String
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+  @@index([entityType, entityId])
+}
+
+model ApprovalAssignment {
+  id String @id @default(cuid())
+  entityType String
+  entityId String
+  dueDate DateTime? @db.Date
+  assigneeId String?
+  organizationId String
+  assignee User? @relation("ApprovalAssignees", fields: [assigneeId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, entityType, entityId])
+  @@index([organizationId, dueDate])
+}
+
+model SupplierQuotation {
+  id String @id @default(cuid())
+  purchaseRequestId String
+  supplierId String
+  totalAmount Decimal @db.Decimal(14, 2)
+  leadDays Int
+  notes String?
+  selected Boolean @default(false)
+  organizationId String
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([organizationId, purchaseRequestId])
+  @@unique([purchaseRequestId, supplierId])
+}
+
+model SiteInspection {
+  id String @id @default(cuid())
+  title String
+  type String
+  finding String
+  severity IssueSeverity @default(MEDIUM)
+  status InspectionStatus @default(OPEN)
+  correctiveAction String?
+  correctiveOwner String?
+  correctiveEvidenceUrls String[] @default([])
+  verificationNote String?
+  verifiedBy String?
+  verifiedAt DateTime?
+  evidenceUrls String[] @default([])
+  dueDate DateTime? @db.Date
+  projectId String
+  projectSiteId String
+  organizationId String
+  project Project @relation(fields:[projectId],references:[id],onDelete:Cascade)
+  projectSite ProjectSite @relation(fields:[projectSiteId],references:[id],onDelete:Cascade)
+  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade)
+  createdAt DateTime @default(now())
+  @@index([organizationId])
+}

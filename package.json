@@ -1,0 +1,14 @@
+{
+  "name": "kravient-build",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "concurrently -n web,api -c cyan,magenta \"npm run dev --workspace @kravient/web\" \"npm run dev --workspace @kravient/api\"",
+    "build": "npm run build --workspaces",
+    "check": "npm run check --workspaces",
+    "db:generate": "npm run db:generate --workspace @kravient/api",
+    "db:migrate": "npm run db:migrate --workspace @kravient/api"
+  },
+  "devDependencies": {"concurrently": "^9.1.2"}
+}

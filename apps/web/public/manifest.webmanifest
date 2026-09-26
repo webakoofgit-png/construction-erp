@@ -1,0 +1,9 @@
+{
+  "name": "Kravient Build",
+  "short_name": "Kravient",
+  "description": "Construction site operations and project control.",
+  "start_url": "/site-mobile",
+  "display": "standalone",
+  "background_color": "#f7f8fa",
+  "theme_color": "#1f5560"
+}

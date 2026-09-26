@@ -1,0 +1,7 @@
+node_modules/
+apps/api/uploads/
+dist/
+.env
+*.log
+.npm-cache/
+apps/api/src/generated/
