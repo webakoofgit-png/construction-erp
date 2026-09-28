@@ -1,9 +1,9 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci && npm run db:generate && npm run build --workspace @kravient/api"
+buildCommand = "npm install && npm run db:generate && npm run build"
 
 [deploy]
-startCommand = "npm run start --workspace @kravient/api"
+startCommand = "npm run start"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
